@@ -24,7 +24,7 @@ jobs:
           packages: platform-tools
 
       - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Extract project
         run: |
@@ -32,9 +32,23 @@ jobs:
           unzip -q BookSplitter-Android-Source.zip -d extracted
           test -f extracted/BookSplitter/gradlew
 
+      - name: Use stable Android SDK 36
+        run: |
+          sed -i 's/compileSdk = 37/compileSdk = 36/' extracted/BookSplitter/app/build.gradle.kts
+          sed -i 's/targetSdk = 37/targetSdk = 36/' extracted/BookSplitter/app/build.gradle.kts
+
       - name: Test and build APK
         working-directory: extracted/BookSplitter
         run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Spittler-debug-APK
+          path: extracted/BookSplitter/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error        run: |
           chmod +x gradlew
           ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug
 
